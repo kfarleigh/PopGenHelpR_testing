@@ -1,0 +1,394 @@
+---
+title: "Evaluating PopGenHelpR with adegenet, hierfstat, mmod, and StAMPP"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{PopGenHelpR_benchmarking}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  options(rmarkdown.html_vignette.check_title = FALSE)
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Purpose
+
+We will compare the performance of `PopGenHelpR` with other R packages available on CRAN. Below, we list the packages we will compare `PopGenHelpR` with and the statistics in each comparison. 
+
+**F~st~ and Nei's D**
+
+- [StAMPP](https://cran.r-project.org/web/packages/StAMPP/index.html) ([Pembleton et al., 2013](https://doi.org/10.1111/1755-0998.12129))
+
+**Jost's D**
+
+- [mmod](https://cran.r-project.org/web/packages/mmod/index.html) (Winter et al., 2017)
+
+**Expected and Observed Heterozygosity**
+
+- [hierfstat](https://cran.r-project.org/web/packages/hierfstat/index.html) ([Goudet, 2005](https://doi.org/10.1111/j.1471-8286.2004.00828.x))
+
+- [adegenet](https://cran.r-project.org/web/packages/adegenet/index.html) ([Jombart, 2008](https://doi.org/10.1093/bioinformatics/btn129))
+
+
+We will use data from 3 different publications. 
+
+1. Horned lizard data from [Farleigh et al. (2021)](https://onlinelibrary.wiley.com/doi/full/10.1111/mec.16070)
+    + This is a subset of the study data, has no missing data and is the internal data included in PopGenHelpR. 
+
+2. Simulated data from [Wiens & Collela (2025)](https://onlinelibrary.wiley.com/doi/full/10.1111/1755-0998.14039).
+    + This is a subset of the study data and has no missing data. The purpose is to understand how PopGenHelpR works with phased data where genotypes are separated by a "|".
+    
+3. Cricket frog data from [Murphy et al. (2025)](https://link.springer.com/article/10.1007/s10980-025-02086-0)
+    + This is the full dataset that contains missing data, allowing us to understand how PopGenHelpR performs when missing data is included in the dataset.
+
+### Let's Begin
+
+First we will load the packages we need. Not all of the packages will be used to calculate population genomic statistics, we just need them for data wrangling or formatting (e.g., stringr, tidyr).
+
+```{r setup}
+# Load the packages
+library(mmod)
+library(adegenet)
+library(hierfstat)
+library(StAMPP)
+library(stringr)
+library(vcfR)
+library(PopGenHelpR)
+library(tidyr)
+
+```
+
+**Note that these calculations will take a long time to run yourself. On the order of hours to days depending on your machine.**
+
+#### Horned lizard data differentiation calculations
+
+Let's start with the horned lizard dataset. We will to convert the data to some other formats for other packages. 
+
+```{r HL dif calcs}
+# Load the data 
+data("HornedLizard_VCF")
+data("HornedLizard_Pop")
+
+# Make horned lizard data into a genind
+Genind <- vcfR2genind(HornedLizard_VCF)
+Genind@pop <- as.factor(HornedLizard_Pop$Population)
+ploidy(Genind) <- 2
+
+# Make horned lizard data into a genlight
+Glight <- vcfR2genlight(HornedLizard_VCF)
+Glight@pop <- as.factor(HornedLizard_Pop$Population)
+ploidy(Glight) <- 2
+
+# Calculate differentiation measures
+PGH_dif_HL <- Differentiation(HornedLizard_VCF, pops = HornedLizard_Pop, statistic = "all")
+
+PGH_dif_HL_mat <- as.matrix(PGH_dif_HL$JostsD)
+
+
+# Jost's D with mmod for the horned lizard data 
+mmod <- pairwise_D(Genind)
+
+mmod_mat <- as.matrix(mmod)
+
+
+## Fst and Nei's D with StAMPP for the horned lizard data 
+# Fst
+Stmp_fst <- stamppFst(Glight, nboots = 0)
+
+# Population Nei's D
+Stmp_popND <- stamppNeisD(Glight)
+
+# Individual Nei's D
+Stmp_indND <- stamppNeisD(Glight, pop = FALSE)
+
+```
+
+#### Wiens & Collela (2025) differentiation calculations
+
+Next, we will calculate statiistics using the Wiens & Collela data. Again, we have to convert to other formats. We will also use different file types as input to ensure that PopGenHelpR provides the same estimates regardless of file type or R object.
+
+```{r W&C dif calcs}
+wiens_files <- list.files(pattern = "weins*", full.names = T)
+
+wiens_pops <- read.csv(wiens_files[1])
+wiens_vcf <- read.vcfR(wiens_files[2]) 
+
+### Differentiation 
+Genind2 <- vcfR2genind(wiens_vcf)
+Genind2@pop <- as.factor(wiens_pops$Population)
+ploidy(Genind2) <- 2
+
+
+Glight2 <- vcfR2genlight(wiens_vcf)
+Glight2@pop <- as.factor(wiens_pops$Population)
+ploidy(Glight2) <- 2
+
+# VCF
+PGH_wiens_dif_vcf <- Differentiation(data = wiens_files[2], pops = wiens_pops, statistic = "all")
+
+# vcfR object
+PGH_wiens_dif_vcfR <- Differentiation(data = wiens_vcf, pops = wiens_pops, statistic = "all")
+
+# geno file 
+PGH_wiens_dif_geno <- Differentiation(data = wiens_files[3], pops = wiens_pops, statistic = "all", missing_value = '-1') # Stopped here
+
+
+### Let's make sure that PGH gives the same estimates no matter what was used as input 
+# Fst
+table(PGH_wiens_dif_geno$Fst == PGH_wiens_dif_vcf$Fst)
+table(PGH_wiens_dif_geno$Fst == PGH_wiens_dif_vcfR$Fst)
+
+# Population Nei's D
+
+table(PGH_wiens_dif_geno$NeisD_pop == PGH_wiens_dif_vcf$NeisD_pop)
+table(PGH_wiens_dif_geno$NeisD_pop == PGH_wiens_dif_vcfR$NeisD_pop)
+
+# Individual Nei's D
+
+table(PGH_wiens_dif_geno$NeisD_ind == PGH_wiens_dif_vcf$NeisD_ind)
+table(PGH_wiens_dif_geno$NeisD_ind == PGH_wiens_dif_vcfR$NeisD_ind)
+
+# Jost's D
+
+table(PGH_wiens_dif_geno$JostsD == PGH_wiens_dif_vcf$JostsD)
+table(PGH_wiens_dif_geno$JostsD == PGH_wiens_dif_vcfR$JostsD)
+
+
+# Jost's D with mmod 
+mmod_wiens_JD <- pairwise_D(Genind2)
+
+
+## Fst and Nei's D with StAMPP
+# Fst
+Stmp_fst2 <- stamppFst(Glight2, nboots = 0)
+
+# Population Nei's D
+Stmp_popND2 <- stamppNeisD(Glight2)
+
+
+# Individual Nei's D
+Stmp_indND2 <- stamppNeisD(Glight2, pop = FALSE)
+
+```
+
+
+Nice, our calculations are the same regardless if we used a vcf file, vcfR object, or geno file. Let's move on to the cricket frog data before comparing the outputs!
+
+#### Cricket frog differentiation calculations
+
+Finally, we will run the calculations on the cricket frog data from Murphy et al. (2025). 
+
+```{r CF dif calcs}
+
+murphy_vcf2 <- read.vcfR('Murphy_CF_final.recode.vcf')
+murphy_pops <- read.delim("Murphy_CF_popmap_final.txt", header = F)
+murphy_pops$V2[murphy_pops$V2 == "5R"] <- "fiveR"
+
+colnames(murphy_pops) <- c("Inds", "population")
+
+
+Genind4 <- vcfR2genind(murphy_vcf2)
+Genind4@pop <- as.factor(murphy_pops$population)
+ploidy(Genind4) <- 2
+
+Glight4 <- vcfR2genlight(murphy_vcf2)
+Glight4@pop <- as.factor(murphy_pops$population)
+ploidy(Glight4) <- 2
+
+
+# Test differentiation with PGH
+PGH_murphy_dif2_JDwNA <- Differentiation(data = murphy_vcf2, pops = murphy_pops, statistic = "all")
+
+PGH_murphy_wNA_JD <- as.matrix(PGH_murphy_dif2_JDwNA$JostsD)
+
+# Jost's D with mmod 
+mmod_murphy_JD_wNA <- pairwise_D(Genind4)
+
+mmod_murphy_JD_mat_wNA <- as.matrix(mmod_murphy_JD_wNA)
+
+# Fst and Neis D  
+Stmp_fst4 <- stamppFst(Glight4, nboots = 0)
+Stmp_popND4 <- stamppNeisD(Glight4)
+Stmp_indND4 <- stamppNeisD(Glight4, pop = FALSE)
+
+```
+
+
+##### Comparing the outputs from PopGenHelpR differentiation function with other R packages
+
+We can compare the PopGenHelpR output with other packages to see if they are different. Note that we have to do some formatting/data wrangling to ensure that we are comparing the right things for some of the statistics. 
+
+```{r Dif comps}
+### Let's see how different the estimates from the different packages are?
+
+# Make the StAMPP and mmod results matrices with the upper triangle NA
+
+# Farleigh et al. (2021) data
+mmod_mat <- as.matrix(mmod)
+mmod_mat[upper.tri(mmod_mat)] <- NA
+
+Stmp_indND_mat <- Stmp_indND
+Stmp_indND_mat[upper.tri(Stmp_indND_mat)] <- NA
+
+Stmp_popND_mat <- Stmp_popND
+Stmp_popND_mat[upper.tri(Stmp_popND_mat)] <- NA
+
+# Wiens data 
+mmod_wiens_JD_mat <- as.matrix(mmod_wiens_JD)
+mmod_wiens_JD_mat[upper.tri(mmod_wiens_JD_mat)] <- NA
+
+Stmp_indND2_mat <- Stmp_indND2
+Stmp_indND2_mat[upper.tri(Stmp_indND2_mat)] <- NA
+
+Stmp_popND2_mat <- Stmp_popND2
+Stmp_popND2_mat[upper.tri(Stmp_popND2_mat)] <- NA
+
+
+# Murphy data
+mmod_murphy_JD_mat_wNA <- as.matrix(mmod_murphy_JD_wNA)
+mmod_murphy_JD_mat_wNA[upper.tri(mmod_murphy_JD_mat_wNA)] <- NA
+
+Stmp_indND4_mat <- Stmp_indND4
+Stmp_indND4_mat[upper.tri(Stmp_indND4_mat)] <- NA
+
+Stmp_popND4_mat <- Stmp_popND4
+Stmp_popND4_mat[upper.tri(Stmp_popND4_mat)] <- NA
+
+
+## Jost's D
+# Farleigh et al. (2021) data
+max(abs(PGH_dif_HL$JostsD-mmod_mat), na.rm = T)
+mean(PGH_dif_HL$JostsD-mmod_mat, na.rm = T)
+median(PGH_dif_HL$JostsD-mmod_mat, na.rm = T)
+
+
+# Wiens data 
+max(abs(PGH_wiens_dif_vcf$JostsD-mmod_wiens_JD_mat), na.rm = T)
+mean(PGH_wiens_dif_vcf$JostsD-mmod_wiens_JD_mat, na.rm = T)
+median(PGH_wiens_dif_vcf$JostsD-mmod_wiens_JD_mat, na.rm = T)
+
+# Murphy data needs to be looped, mmod outputs populations in different order than PGH 
+murph_pop <- unique(murphy_pops$population)
+
+# get the comparisons 
+murph_comps <- combn(murph_pop, m = 2)
+
+JD_abs_dif <- c()
+JD_dif <- c()
+
+for(i in 1:ncol(murph_comps)){
+  
+  tmp_comp <- murph_comps[,i]
+  
+  tmp_pop1 <- tmp_comp[1]
+  tmp_pop2 <- tmp_comp[2]
+  
+  idx_pop1 <- which(colnames(mmod_murphy_JD_mat_wNA) == tmp_pop1)
+  idx_pop2 <- which(rownames(mmod_murphy_JD_mat_wNA) == tmp_pop2)
+  
+  tmp_mmod <- mmod_murphy_JD_mat_wNA[idx_pop2, idx_pop1]
+  tmp_mmod <- c(tmp_mmod, mmod_murphy_JD_mat_wNA[idx_pop1, idx_pop2])
+  
+  tmp_mmod <- na.omit(tmp_mmod)
+  
+  idx_pop1_PGH <- which(colnames(PGH_murphy_wNA_JD) == tmp_pop1)
+  idx_pop2_PGH <- which(colnames(PGH_murphy_wNA_JD) == tmp_pop2)
+  
+  tmp_PGH <- PGH_murphy_wNA_JD[idx_pop2_PGH, idx_pop1_PGH]
+  tmp_PGH <- c(tmp_PGH,PGH_murphy_wNA_JD[idx_pop1_PGH, idx_pop2_PGH])
+  
+  tmp_PGH <- na.omit(tmp_PGH)
+  
+  JD_abs_dif <- c(JD_abs_dif, abs(tmp_PGH-tmp_mmod))
+  JD_dif <- c(JD_dif, tmp_PGH-tmp_mmod)
+  
+  remove(idx_pop1,idx_pop1_PGH,idx_pop2,idx_pop2_PGH,tmp_PGH,tmp_mmod)
+}
+
+max(JD_abs_dif)
+mean(JD_dif)
+median(JD_dif)
+
+## Fst
+# Farleigh et al. (2021) data
+max(abs(PGH_dif_HL$Fst-Stmp_fst), na.rm = T)
+mean(PGH_dif_HL$Fst-Stmp_fst, na.rm = T)
+median(PGH_dif_HL$Fst-Stmp_fst, na.rm = T)
+
+# Wiens data 
+max(abs(PGH_wiens_dif_vcf$Fst-Stmp_fst2), na.rm = T)
+mean(PGH_wiens_dif_vcf$Fst-Stmp_fst2, na.rm = T)
+median(PGH_wiens_dif_vcf$Fst-Stmp_fst2, na.rm = T)
+
+# Murphy with NAs
+max(abs(PGH_murphy_dif2_JDwNA$Fst-Stmp_fst4), na.rm = T)
+mean(PGH_murphy_dif2_JDwNA$Fst-Stmp_fst4, na.rm = T)
+median(PGH_murphy_dif2_JDwNA$Fst-Stmp_fst4, na.rm = T)
+
+## Population Nei's D
+# Farleigh et al. (2021) data
+max(abs(PGH_dif_HL$NeisD_pop-Stmp_popND), na.rm = T)
+mean(PGH_dif_HL$NeisD_pop-Stmp_popND, na.rm = T)
+median(PGH_dif_HL$NeisD_pop-Stmp_popND, na.rm = T)
+
+# Wiens data 
+max(abs(PGH_wiens_dif_vcf$NeisD_pop-Stmp_popND2_mat), na.rm = T)
+mean(PGH_wiens_dif_vcf$NeisD_pop-Stmp_popND2_mat, na.rm = T)
+median(PGH_wiens_dif_vcf$NeisD_pop-Stmp_popND2_mat, na.rm = T)
+
+# Murphy with NA
+max(abs(PGH_murphy_dif2_JDwNA$NeisD_pop-Stmp_popND4_mat), na.rm = T)
+mean(PGH_murphy_dif2_JDwNA$NeisD_pop-Stmp_popND4_mat, na.rm = T)
+median(PGH_murphy_dif2_JDwNA$NeisD_pop-Stmp_popND4_mat, na.rm = T)
+
+## Individual Nei's D
+# Farleigh et al. (2021) data
+max(abs(PGH_dif_HL$NeisD_ind-Stmp_indND), na.rm = T)
+mean(PGH_dif_HL$NeisD_ind-Stmp_indND, na.rm = T)
+median(PGH_dif_HL$NeisD_ind-Stmp_indND, na.rm = T)
+
+# Wiens data 
+max(abs(PGH_wiens_dif_vcf$NeisD_ind-Stmp_indND2_mat), na.rm = T)
+mean(PGH_wiens_dif_vcf$NeisD_ind-Stmp_indND2_mat, na.rm = T)
+median(PGH_wiens_dif_vcf$NeisD_ind-Stmp_indND2_mat, na.rm = T)
+
+# Murphy with NA
+max(abs(PGH_murphy_dif2_JDwNA$NeisD_ind-Stmp_indND4_mat), na.rm = T)
+mean(PGH_murphy_dif2_JDwNA$NeisD_ind-Stmp_indND4_mat, na.rm = T)
+median(PGH_murphy_dif2_JDwNA$NeisD_ind-Stmp_indND4_mat, na.rm = T)
+```
+
+
+The differentiation estimates look good, what about our estimates of heterozygosity?
+
+###
+
+
+Please reach out to Keaka Farleigh (farleik@miamioh.edu) if you have any questions, and please see the references and acknowledgments below. 
+
+
+## References
+
+Farleigh, K., Vladimirova, S. A., Blair, C., Bracken, J. T., Koochekian, N., Schield, D. R., ... & Jezkova, T. (2021). The effects of         climate and demographic history in shaping genomic variation across populations of the Desert Horned Lizard (Phrynosoma platyrhinos).       Molecular Ecology, 30(18), 4481-4496.
+
+Goudet, J. (2005). hierfstat, a package for R to compute and test hierarchical F‐statistics. Molecular ecology notes, 5(1), 184-186.
+
+Jost, L. (2008). GST and its relatives do not measure differentiation. Molecular ecology, 17(18), 4015-4026.
+
+Knaus, B. J., & Grünwald, N. J. (2017). vcfr: a package to manipulate and visualize variant call format data in R. Molecular ecology          resources, 17(1), 44-53.
+
+Nei, M. (1972). Genetic distance between populations. The American Naturalist, 106(949), 283-292.
+
+Pembleton, L. W., Cogan, N. O., & Forster, J. W. (2013). St AMPP: An R package for calculation of genetic differentiation and structure of    mixed‐ploidy level populations. Molecular ecology resources, 13(5), 946-952.
+
+Weir, B. S., & Cockerham, C. C. (1984). Estimating F-statistics for the analysis of population structure. evolution, 1358-1370.
+
+Winter, D., Green, P., Kamvar, Z., & Gosselin, T. (2017). mmod: modern measures of population differentiation (Version 1.3.3).
+
+## Acknowledgements
+
+We thank the authors of `hierfstat`, `mmod`, `StAMPP`, and all of the package dependencies. They provided inspiration for `PopGenHelpR` and their commitment to open science made it possible to develop and benchmark our package.

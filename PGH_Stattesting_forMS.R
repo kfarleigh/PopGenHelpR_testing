@@ -174,8 +174,9 @@ Stmp_popND2_mat[upper.tri(Stmp_popND2_mat)] <- NA
 
 
 # Murphy data
-mmod_murphy_JD_mat <- as.matrix(mmod_murphy_JD)
-mmod_murphy_JD_mat[upper.tri(mmod_murphy_JD_mat)] <- NA
+mmod_murphy_JD_mat_wNA <- as.matrix(mmod_murphy_JD_wNA)
+mmod_murphy_JD_mat_wNA[upper.tri(mmod_murphy_JD_mat_wNA)] <- NA
+
 Stmp_indND4_mat <- Stmp_indND4
 Stmp_indND4_mat[upper.tri(Stmp_indND4_mat)] <- NA
 
@@ -211,19 +212,19 @@ for(i in 1:ncol(murph_comps)){
   tmp_pop1 <- tmp_comp[1]
   tmp_pop2 <- tmp_comp[2]
   
-  idx_pop1 <- which(colnames(mmod_murphy_JD_mat) == tmp_pop1)
-  idx_pop2 <- which(rownames(mmod_murphy_JD_mat) == tmp_pop2)
+  idx_pop1 <- which(colnames(mmod_murphy_JD_mat_wNA) == tmp_pop1)
+  idx_pop2 <- which(rownames(mmod_murphy_JD_mat_wNA) == tmp_pop2)
   
-  tmp_mmod <- mmod_murphy_JD_mat[idx_pop2, idx_pop1]
-  tmp_mmod <- c(tmp_mmod, mmod_murphy_JD_mat[idx_pop1, idx_pop2])
+  tmp_mmod <- mmod_murphy_JD_mat_wNA[idx_pop2, idx_pop1]
+  tmp_mmod <- c(tmp_mmod, mmod_murphy_JD_mat_wNA[idx_pop1, idx_pop2])
   
   tmp_mmod <- na.omit(tmp_mmod)
   
-  idx_pop1_PGH <- which(colnames(PGH_murphy_JD) == tmp_pop1)
-  idx_pop2_PGH <- which(colnames(PGH_murphy_JD) == tmp_pop2)
+  idx_pop1_PGH <- which(colnames(PGH_murphy_wNA_JD) == tmp_pop1)
+  idx_pop2_PGH <- which(colnames(PGH_murphy_wNA_JD) == tmp_pop2)
   
-  tmp_PGH <- PGH_murphy_JD[idx_pop2_PGH, idx_pop1_PGH]
-  tmp_PGH <- c(tmp_PGH,PGH_murphy_JD[idx_pop1_PGH, idx_pop2_PGH])
+  tmp_PGH <- PGH_murphy_wNA_JD[idx_pop2_PGH, idx_pop1_PGH]
+  tmp_PGH <- c(tmp_PGH,PGH_murphy_wNA_JD[idx_pop1_PGH, idx_pop2_PGH])
   
   tmp_PGH <- na.omit(tmp_PGH)
   
@@ -290,17 +291,19 @@ median(PGH_murphy_dif2_JDwNA$NeisD_ind-Stmp_indND4_mat, na.rm = T)
 ##### Heterozygosity #####
 ##########################
 
-PGH_het_HL <- Heterozygosity(data = HornedLizard_VCF, pops = HornedLizard_Pop)
+# We need to rename populations 0, 1, and 2 in the weins data or we will get a warning message. It does not seem to affect the calculations, but we will do it to be safe. 
 
-PGH_het_HL_wNA <- Heterozygosity(data = vcf_wNA, pops = HornedLizard_Pop)
+wiens_pops$Population[wiens_pops$Population == 0] <- 21
+wiens_pops$Population[wiens_pops$Population == 1] <- 22
+wiens_pops$Population[wiens_pops$Population == 2] <- 23
+
+PGH_het_HL <- Heterozygosity(data = HornedLizard_VCF, pops = HornedLizard_Pop)
 
 PGH_het_wiens_vcf <- Heterozygosity(data = wiens_files[2], pops = wiens_pops)
 
 PGH_het_wiens_vcfR <- Heterozygosity(data = wiens_vcf, pops = wiens_pops)
 
 PGH_het_wiens_geno <- Heterozygosity(data = wiens_files[3], pops = wiens_pops)
-
-PGH_het_murphy <- Heterozygosity(data = murphy_vcf, pops = murphy_pops)
 
 PGH_het_murphy_wNA <- Heterozygosity(data = murphy_vcf2, pops = murphy_pops)
 
@@ -326,92 +329,75 @@ table(PGH_het_wiens_geno$Hs_obs  == PGH_het_wiens_vcfR$Hs_obs)
 table(PGH_het_wiens_geno$IR  == PGH_het_wiens_vcfR$IR)
 table(PGH_het_wiens_geno$HL  == PGH_het_wiens_vcfR$HL)
 
-# Check to make sure the heterozygosity estimates match regardless of missing data
-table(PGH_het_HL$Ho_perpop == PGH_het_HL_wNA$Ho_perpop)
-table(PGH_het_HL$Ho_perloc == PGH_het_HL_wNA$Ho_perloc)
-table(PGH_het_HL$He_perpop == PGH_het_HL_wNA$He_perpop)
-table(PGH_het_HL$He_perloc == PGH_het_HL_wNA$He_perloc)
-table(PGH_het_HL$PHt == PGH_het_HL_wNA$PHt)
-table(PGH_het_HL$Hs_exp  == PGH_het_HL_wNA$Hs_exp)
-table(PGH_het_HL$Hs_obs  == PGH_het_HL_wNA$Hs_obs)
-table(PGH_het_HL$IR  == PGH_het_HL_wNA$IR)
-table(PGH_het_HL$HL  == PGH_het_HL_wNA$HL)
-
-table(PGH_het_murphy$Ho_perpop == PGH_het_murphy_wNA$Ho_perpop)
-table(PGH_het_murphy$Ho_perloc == PGH_het_murphy_wNA$Ho_perloc)
-table(PGH_het_murphy$He_perpop == PGH_het_murphy_wNA$He_perpop)
-table(PGH_het_murphy$He_perloc == PGH_het_murphy_wNA$He_perloc)
-table(PGH_het_murphy$PHt == PGH_het_murphy_wNA$PHt)
-table(PGH_het_murphy$Hs_exp  == PGH_het_murphy_wNA$Hs_exp)
-table(PGH_het_murphy$Hs_obs  == PGH_het_murphy_wNA$Hs_obs)
-table(PGH_het_murphy$IR  == PGH_het_murphy_wNA$IR)
-table(PGH_het_murphy$HL  == PGH_het_murphy_wNA$HL)
-
 ### Check to make sure they match with other programs
 
 ## Observed heterozygosity
 # Horned lizard
 Hstat_HL <- genind2hierfstat(Genind)
-Hstat_HL_wNA <- genind2hierfstat(Genind_wNA)
 
 Hstat_hets_HL <- basic.stats(Hstat_HL)
 Hstat_Ho_HL <- colMeans(Hstat_hets_HL$Ho)
 
-Hstat_hets_HL_wNA <- basic.stats(Hstat_HL_wNA)
-Hstat_Ho_HL_wNA <- colMeans(Hstat_hets_HL_wNA$Ho)
 
 # Weins
+# Reset the weins genind 
+Genind2@pop <- as.factor(wiens_pops$Population)
 Hstat_weins <- genind2hierfstat(Genind2)
 
 Hstat_het_weins <- basic.stats(Hstat_weins)
 Hstat_Ho_weins <- colMeans(Hstat_het_weins$Ho)
 
 # Murphy 
-Hstat_murphy <- genind2hierfstat(Genind3)
 Hstat_murphy_wNA <- genind2hierfstat(Genind4)
 
-Hstat_hets_murphy <- basic.stats(Hstat_murphy)
-Hstat_Ho_murphy <- colMeans(Hstat_hets_murphy$Ho, na.rm = T)
 
 Hstat_hets_murphy_wNA <- basic.stats(Hstat_murphy_wNA)
 Hstat_Ho_murphy_wNA <- colMeans(Hstat_hets_murphy_wNA$Ho, na.rm = T)
 
 # Check if the horned lizard ones match
-PGH_het_HL$Ho_perpop[,1]-Hstat_Ho_HL
-PGH_het_HL_wNA$Ho_perpop[,1]-Hstat_Ho_HL_wNA
+max(abs(PGH_het_HL$Ho_perpop[,1]-Hstat_Ho_HL))
+mean(PGH_het_HL$Ho_perpop[,1]-Hstat_Ho_HL)
+median(PGH_het_HL$Ho_perpop[,1]-Hstat_Ho_HL)
 
 # Check if weins matched
-PGH_het_wiens_vcf$Ho_perpop[,1]-Hstat_Ho_weins
+max(abs(PGH_het_wiens_vcf$Ho_perpop[order(match(PGH_het_wiens_vcf$Ho_perpop$Pop, names(Hstat_Ho_weins))),1] - Hstat_Ho_weins))
+mean(PGH_het_wiens_vcf$Ho_perpop[order(match(PGH_het_wiens_vcf$Ho_perpop$Pop, names(Hstat_Ho_weins))),1] - Hstat_Ho_weins)
+median(PGH_het_wiens_vcf$Ho_perpop[order(match(PGH_het_wiens_vcf$Ho_perpop$Pop, names(Hstat_Ho_weins))),1] - Hstat_Ho_weins)
+
 
 # Check if murphy data matched, we do this manually because they are ordered differently
+max(abs(PGH_het_murphy_wNA$Ho_perpop[order(match(PGH_het_murphy_wNA$Ho_perpop$Pop, names(Hstat_Ho_murphy_wNA))),1] - Hstat_Ho_murphy_wNA))
+mean(PGH_het_murphy_wNA$Ho_perpop[order(match(PGH_het_murphy_wNA$Ho_perpop$Pop, names(Hstat_Ho_murphy_wNA))),1] - Hstat_Ho_murphy_wNA)
+median(PGH_het_murphy_wNA$Ho_perpop[order(match(PGH_het_murphy_wNA$Ho_perpop$Pop, names(Hstat_Ho_murphy_wNA))),1] - Hstat_Ho_murphy_wNA)
 
-PGH_het_murphy$Ho_perpop[order(match(PGH_het_murphy$Ho_perpop$Pop, names(Hstat_Ho_murphy))),1] - Hstat_Ho_murphy
-PGH_het_murphy_wNA$Ho_perpop[order(match(PGH_het_murphy_wNA$Ho_perpop$Pop, names(Hstat_Ho_murphy_wNA))),1] - Hstat_Ho_murphy_wNA
 
 
 ## Expected heterozygosity (He)
 # Horned lizard
 He_HL <- Hs(Genind)
-He_HL_wNA <- Hs(Genind_wNA)
 
 # Weins
 He_weins <- Hs(Genind2)
 
 # Murphy 
-He_murphy <- Hs(Genind3)
 He_murphy_wNA <- Hs(Genind4)
 
 # Check if the horned lizard ones match
-PGH_het_HL$He_perpop$Expected.Heterozygosity-He_HL
-PGH_het_HL_wNA$He_perpop$Expected.Heterozygosity-He_HL_wNA
+max(abs(PGH_het_HL$He_perpop$Expected.Heterozygosity-He_HL))
+mean(PGH_het_HL$He_perpop$Expected.Heterozygosity-He_HL)
+median(PGH_het_HL$He_perpop$Expected.Heterozygosity-He_HL)
 
 # Check if the weins ones match
-PGH_het_wiens_vcf$He_perpop$Expected.Heterozygosity-He_weins
+max(abs(PGH_het_wiens_vcf$He_perpop[order(match(PGH_het_wiens_vcf$He_perpop$Pop, names(He_weins))),1]-He_weins))
+mean(PGH_het_wiens_vcf$He_perpop[order(match(PGH_het_wiens_vcf$He_perpop$Pop, names(He_weins))),1]-He_weins)
+median(PGH_het_wiens_vcf$He_perpop[order(match(PGH_het_wiens_vcf$He_perpop$Pop, names(He_weins))),1]-He_weins)
 
 # Check if the murphy ones match
+max(abs(PGH_het_murphy_wNA$He_perpop[order(match(PGH_het_murphy_wNA$He_perpop$Pop, names(He_murphy_wNA))),1]-He_murphy_wNA))
+mean(PGH_het_murphy_wNA$He_perpop[order(match(PGH_het_murphy_wNA$He_perpop$Pop, names(He_murphy_wNA))),1]-He_murphy_wNA)
+median(PGH_het_murphy_wNA$He_perpop[order(match(PGH_het_murphy_wNA$He_perpop$Pop, names(He_murphy_wNA))),1]-He_murphy_wNA)
 
-PGH_het_murphy$He_perpop[order(match(PGH_het_murphy$He_perpop$Pop, names(He_murphy))),1]-He_murphy
-PGH_het_murphy_wNA$He_perpop[order(match(PGH_het_murphy_wNA$He_perpop$Pop, names(He_murphy_wNA))),1]-He_murphy_wNA
+
 
 #############################################
 ### Test statistics originally from Rhh #####
@@ -419,6 +405,7 @@ PGH_het_murphy_wNA$He_perpop[order(match(PGH_het_murphy_wNA$He_perpop$Pop, names
 
 source("./DC_hetero.R")
 
+# Farleigh et al. (2021)
 HL_rhh <- as.data.frame(t(extract.gt(HornedLizard_VCF, return.alleles = T)))
 HL_rhh <- HL_rhh %>% 
   separate_wider_delim(everything(), delim = "/", names_sep = ".")
@@ -427,32 +414,58 @@ HL_rhh_final <- cbind(HornedLizard_Pop[1:2], HL_rhh)
 
 HL_ir <- ir(HL_rhh_final)
 HL_hl <- hl(HL_rhh_final)
-HL_mlh <- mlh(HL_rhh_final)
-HL_oh <- oh(HL_rhh_final)
-HL_sh <- sh(HL_rhh_final)
 
-# Use the functions from Daren Card's script to test IR and HL
-max(PGH_het_HL$IR[,1]-HL_ir, na.rm = T)
-mean(PGH_het_HL$IR[,1]-HL_ir, na.rm = T)
+# Weins & Collela (2025)
+weins_rhh <- as.data.frame(t(extract.gt(wiens_vcf, return.alleles = T)))
+weins_rhh <- weins_rhh %>% 
+  separate_wider_delim(everything(), delim = "|", names_sep = ".")
 
-max(PGH_het_HL$HL[,1]-HL_hl, na.rm = T)
-mean(PGH_het_HL$HL[,1]-HL_hl, na.rm = T)
+weins_rhh_final <- cbind(wiens_pops[1:2], weins_rhh)
 
-# Try it with missing data 
-HL_rhh_wNA <- as.data.frame(t(extract.gt(vcf_wNA, return.alleles = T)))
-HL_rhh_wNA <- HL_rhh_wNA %>% 
+weins_ir <- ir(weins_rhh_final)
+weins_hl <- hl(weins_rhh_final)
+
+# Murphy et al. (2025)
+murphy_rhh <- as.data.frame(t(extract.gt(murphy_vcf2, return.alleles = T)))
+murphy_rhh[murphy_rhh == "."] <- NA/NA
+murphy_rhh <- murphy_rhh %>% 
   separate_wider_delim(everything(), delim = "/", names_sep = ".")
 
-HL_rhh_wNA_final <- cbind(HornedLizard_Pop[1:2], HL_rhh_wNA)
+murphy_rhh_final <- cbind(murphy_pops[1:2], murphy_rhh)
 
-HL_wNA_ir <- ir(HL_rhh_wNA_final)
-HL_wNA_hl <- hl(HL_rhh_wNA_final)
+murphy_ir <- ir(murphy_rhh_final)
+murphy_hl <- hl(murphy_rhh_final)
 
+
+### Use the functions from Daren Card's script to test IR and HL
+# Farleigh et al. (2021)
 max(PGH_het_HL$IR[,1]-HL_ir, na.rm = T)
 mean(PGH_het_HL$IR[,1]-HL_ir, na.rm = T)
+median(PGH_het_HL$IR[,1]-HL_ir, na.rm = T)
 
-max(PGH_het_HL_wNA$HL[,1]-HL_wNA_hl, na.rm = T)
-mean(PGH_het_HL_wNA$HL[,1]-HL_wNA_hl, na.rm = T)
+# Weins & Collela (2025)
+max(PGH_het_wiens_vcf$IR[,1]-weins_ir, na.rm = T)
+mean(PGH_het_wiens_vcf$IR[,1]-weins_ir, na.rm = T)
+median(PGH_het_wiens_vcf$IR[,1]-weins_ir, na.rm = T)
 
-max(PGH_het_HL_wNA$IR[,1]-HL_wNA_ir, na.rm = T)
-mean(PGH_het_HL_wNA$IR[,1]-HL_wNA_ir, na.rm = T)
+# Murphy et al. (2025)
+max(PGH_het_murphy_wNA$IR[,1]-murphy_ir, na.rm = T)
+mean(PGH_het_murphy_wNA$IR[,1]-murphy_ir, na.rm = T)
+median(PGH_het_murphy_wNA$IR[,1]-murphy_ir, na.rm = T)
+
+
+# Farleigh et al. (2021)
+max(PGH_het_HL$HL[,1]-HL_hl, na.rm = T)
+mean(PGH_het_HL$HL[,1]-HL_hl, na.rm = T)
+median(PGH_het_HL$HL[,1]-HL_hl, na.rm = T)
+
+# Weins & Collela (2025)
+max(PGH_het_wiens_vcf$HL[,1]-weins_hl, na.rm = T)
+mean(PGH_het_wiens_vcf$HL[,1]-weins_hl, na.rm = T)
+median(PGH_het_wiens_vcf$HL[,1]-weins_hl, na.rm = T)
+
+# Murphy et al. (2025)
+max(PGH_het_murphy_wNA$HL[,1]-murphy_hl, na.rm = T)
+mean(PGH_het_murphy_wNA$HL[,1]-murphy_hl, na.rm = T)
+median(PGH_het_murphy_wNA$HL[,1]-murphy_hl, na.rm = T)
+
