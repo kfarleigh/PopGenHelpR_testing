@@ -1,11 +1,10 @@
 ---
 title: "Evaluating PopGenHelpR with adegenet, hierfstat, mmod, and StAMPP"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{PopGenHelpR_benchmarking}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
-  options(rmarkdown.html_vignette.check_title = FALSE)
+output:
+  html_document:
+    theme: spacelab
+    toc: true
+    toc_float: true
 ---
 
 ```{r, include = FALSE}
@@ -63,6 +62,9 @@ library(tidyr)
 ```
 
 **Note that these calculations will take a long time to run yourself. On the order of hours to days depending on your machine.**
+
+
+We will start by comparing PopGenHelpR's `Differentiation` function with genetic differentiation from other R packages. 
 
 #### Horned lizard data differentiation calculations
 
@@ -365,10 +367,200 @@ median(PGH_murphy_dif2_JDwNA$NeisD_ind-Stmp_indND4_mat, na.rm = T)
 
 The differentiation estimates look good, what about our estimates of heterozygosity?
 
-###
+#### Heterozygosity calculations
+
+First, we need to rename a few of the wiens populations because of how the homozygosity and internal relatedness calculations work. 
+
+```{r Het calcs}
+# We need to rename populations 0, 1, and 2 in the weins data or we will get a warning message. It does not seem to affect the calculations, but we will do it to be safe. 
+
+wiens_pops$Population[wiens_pops$Population == 0] <- 21
+wiens_pops$Population[wiens_pops$Population == 1] <- 22
+wiens_pops$Population[wiens_pops$Population == 2] <- 23
+
+PGH_het_HL <- Heterozygosity(data = HornedLizard_VCF, pops = HornedLizard_Pop)
+
+PGH_het_wiens_vcf <- Heterozygosity(data = wiens_files[2], pops = wiens_pops)
+
+PGH_het_wiens_vcfR <- Heterozygosity(data = wiens_vcf, pops = wiens_pops)
+
+PGH_het_wiens_geno <- Heterozygosity(data = wiens_files[3], pops = wiens_pops)
+
+PGH_het_murphy_wNA <- Heterozygosity(data = murphy_vcf2, pops = murphy_pops)
+
+```
+
+Now we will calculate the different heterozygosity measures using other R packages and compare the outputs. We also compare the estimates using different file types to ensure PopGenHelpR provides consistent estimates. 
+
+```{r Het comp and calcs}
+# Check to make sure the heterozygosity estimates match regardless of file type
+
+table(PGH_het_wiens_geno$Ho_perpop == PGH_het_wiens_vcf$Ho_perpop)
+table(PGH_het_wiens_geno$Ho_perloc == PGH_het_wiens_vcf$Ho_perloc)
+table(PGH_het_wiens_geno$He_perpop == PGH_het_wiens_vcf$He_perpop)
+table(PGH_het_wiens_geno$He_perloc == PGH_het_wiens_vcf$He_perloc)
+table(PGH_het_wiens_geno$PHt == PGH_het_wiens_vcf$PHt)
+table(PGH_het_wiens_geno$Hs_exp  == PGH_het_wiens_vcf$Hs_exp)
+table(PGH_het_wiens_geno$Hs_obs  == PGH_het_wiens_vcf$Hs_obs)
+table(PGH_het_wiens_geno$IR  == PGH_het_wiens_vcf$IR)
+table(PGH_het_wiens_geno$HL  == PGH_het_wiens_vcf$HL)
+
+table(PGH_het_wiens_geno$Ho_perpop == PGH_het_wiens_vcfR$Ho_perpop)
+table(PGH_het_wiens_geno$Ho_perloc == PGH_het_wiens_vcfR$Ho_perloc)
+table(PGH_het_wiens_geno$He_perpop == PGH_het_wiens_vcfR$He_perpop)
+table(PGH_het_wiens_geno$He_perloc == PGH_het_wiens_vcfR$He_perloc)
+table(PGH_het_wiens_geno$PHt == PGH_het_wiens_vcfR$PHt)
+table(PGH_het_wiens_geno$Hs_exp  == PGH_het_wiens_vcfR$Hs_exp)
+table(PGH_het_wiens_geno$Hs_obs  == PGH_het_wiens_vcfR$Hs_obs)
+table(PGH_het_wiens_geno$IR  == PGH_het_wiens_vcfR$IR)
+table(PGH_het_wiens_geno$HL  == PGH_het_wiens_vcfR$HL)
+
+### Check to make sure they match with other programs
+
+## Observed heterozygosity
+# Horned lizard
+Hstat_HL <- genind2hierfstat(Genind)
+
+Hstat_hets_HL <- basic.stats(Hstat_HL)
+Hstat_Ho_HL <- colMeans(Hstat_hets_HL$Ho)
 
 
-Please reach out to Keaka Farleigh (farleik@miamioh.edu) if you have any questions, and please see the references and acknowledgments below. 
+# Weins
+# Reset the weins genind 
+Genind2@pop <- as.factor(wiens_pops$Population)
+Hstat_weins <- genind2hierfstat(Genind2)
+
+Hstat_het_weins <- basic.stats(Hstat_weins)
+Hstat_Ho_weins <- colMeans(Hstat_het_weins$Ho)
+
+# Murphy 
+Hstat_murphy_wNA <- genind2hierfstat(Genind4)
+
+
+Hstat_hets_murphy_wNA <- basic.stats(Hstat_murphy_wNA)
+Hstat_Ho_murphy_wNA <- colMeans(Hstat_hets_murphy_wNA$Ho, na.rm = T)
+
+# Check if the horned lizard ones match
+max(abs(PGH_het_HL$Ho_perpop[,1]-Hstat_Ho_HL))
+mean(PGH_het_HL$Ho_perpop[,1]-Hstat_Ho_HL)
+median(PGH_het_HL$Ho_perpop[,1]-Hstat_Ho_HL)
+
+# Check if weins matched
+max(abs(PGH_het_wiens_vcf$Ho_perpop[order(match(PGH_het_wiens_vcf$Ho_perpop$Pop, names(Hstat_Ho_weins))),1] - Hstat_Ho_weins))
+mean(PGH_het_wiens_vcf$Ho_perpop[order(match(PGH_het_wiens_vcf$Ho_perpop$Pop, names(Hstat_Ho_weins))),1] - Hstat_Ho_weins)
+median(PGH_het_wiens_vcf$Ho_perpop[order(match(PGH_het_wiens_vcf$Ho_perpop$Pop, names(Hstat_Ho_weins))),1] - Hstat_Ho_weins)
+
+
+# Check if murphy data matched, we do this manually because they are ordered differently
+max(abs(PGH_het_murphy_wNA$Ho_perpop[order(match(PGH_het_murphy_wNA$Ho_perpop$Pop, names(Hstat_Ho_murphy_wNA))),1] - Hstat_Ho_murphy_wNA))
+mean(PGH_het_murphy_wNA$Ho_perpop[order(match(PGH_het_murphy_wNA$Ho_perpop$Pop, names(Hstat_Ho_murphy_wNA))),1] - Hstat_Ho_murphy_wNA)
+median(PGH_het_murphy_wNA$Ho_perpop[order(match(PGH_het_murphy_wNA$Ho_perpop$Pop, names(Hstat_Ho_murphy_wNA))),1] - Hstat_Ho_murphy_wNA)
+
+
+
+## Expected heterozygosity (He)
+# Horned lizard
+He_HL <- Hs(Genind)
+
+# Weins
+He_weins <- Hs(Genind2)
+
+# Murphy 
+He_murphy_wNA <- Hs(Genind4)
+
+# Check if the horned lizard ones match
+max(abs(PGH_het_HL$He_perpop$Expected.Heterozygosity-He_HL))
+mean(PGH_het_HL$He_perpop$Expected.Heterozygosity-He_HL)
+median(PGH_het_HL$He_perpop$Expected.Heterozygosity-He_HL)
+
+# Check if the weins ones match
+max(abs(PGH_het_wiens_vcf$He_perpop[order(match(PGH_het_wiens_vcf$He_perpop$Pop, names(He_weins))),1]-He_weins))
+mean(PGH_het_wiens_vcf$He_perpop[order(match(PGH_het_wiens_vcf$He_perpop$Pop, names(He_weins))),1]-He_weins)
+median(PGH_het_wiens_vcf$He_perpop[order(match(PGH_het_wiens_vcf$He_perpop$Pop, names(He_weins))),1]-He_weins)
+
+# Check if the murphy ones match
+max(abs(PGH_het_murphy_wNA$He_perpop[order(match(PGH_het_murphy_wNA$He_perpop$Pop, names(He_murphy_wNA))),1]-He_murphy_wNA))
+mean(PGH_het_murphy_wNA$He_perpop[order(match(PGH_het_murphy_wNA$He_perpop$Pop, names(He_murphy_wNA))),1]-He_murphy_wNA)
+median(PGH_het_murphy_wNA$He_perpop[order(match(PGH_het_murphy_wNA$He_perpop$Pop, names(He_murphy_wNA))),1]-He_murphy_wNA)
+
+
+
+#############################################
+### Test statistics originally from Rhh #####
+#############################################
+
+source("./DC_hetero.R")
+
+# Farleigh et al. (2021)
+HL_rhh <- as.data.frame(t(extract.gt(HornedLizard_VCF, return.alleles = T)))
+HL_rhh <- HL_rhh %>% 
+  separate_wider_delim(everything(), delim = "/", names_sep = ".")
+
+HL_rhh_final <- cbind(HornedLizard_Pop[1:2], HL_rhh)
+
+HL_ir <- ir(HL_rhh_final)
+HL_hl <- hl(HL_rhh_final)
+
+# Weins & Collela (2025)
+weins_rhh <- as.data.frame(t(extract.gt(wiens_vcf, return.alleles = T)))
+weins_rhh <- weins_rhh %>% 
+  separate_wider_delim(everything(), delim = "|", names_sep = ".")
+
+weins_rhh_final <- cbind(wiens_pops[1:2], weins_rhh)
+
+weins_ir <- ir(weins_rhh_final)
+weins_hl <- hl(weins_rhh_final)
+
+# Murphy et al. (2025)
+murphy_rhh <- as.data.frame(t(extract.gt(murphy_vcf2, return.alleles = T)))
+murphy_rhh[murphy_rhh == "."] <- NA/NA
+murphy_rhh <- murphy_rhh %>% 
+  separate_wider_delim(everything(), delim = "/", names_sep = ".")
+
+murphy_rhh_final <- cbind(murphy_pops[1:2], murphy_rhh)
+
+murphy_ir <- ir(murphy_rhh_final)
+murphy_hl <- hl(murphy_rhh_final)
+
+
+### Use the functions from Daren Card's script to test IR and HL
+# Farleigh et al. (2021)
+max(PGH_het_HL$IR[,1]-HL_ir, na.rm = T)
+mean(PGH_het_HL$IR[,1]-HL_ir, na.rm = T)
+median(PGH_het_HL$IR[,1]-HL_ir, na.rm = T)
+
+# Weins & Collela (2025)
+max(PGH_het_wiens_vcf$IR[,1]-weins_ir, na.rm = T)
+mean(PGH_het_wiens_vcf$IR[,1]-weins_ir, na.rm = T)
+median(PGH_het_wiens_vcf$IR[,1]-weins_ir, na.rm = T)
+
+# Murphy et al. (2025)
+max(PGH_het_murphy_wNA$IR[,1]-murphy_ir, na.rm = T)
+mean(PGH_het_murphy_wNA$IR[,1]-murphy_ir, na.rm = T)
+median(PGH_het_murphy_wNA$IR[,1]-murphy_ir, na.rm = T)
+
+
+# Farleigh et al. (2021)
+max(PGH_het_HL$HL[,1]-HL_hl, na.rm = T)
+mean(PGH_het_HL$HL[,1]-HL_hl, na.rm = T)
+median(PGH_het_HL$HL[,1]-HL_hl, na.rm = T)
+
+# Weins & Collela (2025)
+max(PGH_het_wiens_vcf$HL[,1]-weins_hl, na.rm = T)
+mean(PGH_het_wiens_vcf$HL[,1]-weins_hl, na.rm = T)
+median(PGH_het_wiens_vcf$HL[,1]-weins_hl, na.rm = T)
+
+# Murphy et al. (2025)
+max(PGH_het_murphy_wNA$HL[,1]-murphy_hl, na.rm = T)
+mean(PGH_het_murphy_wNA$HL[,1]-murphy_hl, na.rm = T)
+median(PGH_het_murphy_wNA$HL[,1]-murphy_hl, na.rm = T)
+
+```
+
+
+
+
+Please reach out to Keaka Farleigh (keakafarleigh@gmail.com) if you have any questions, and please see the references and acknowledgments below. 
 
 
 ## References
@@ -379,7 +571,9 @@ Goudet, J. (2005). hierfstat, a package for R to compute and test hierarchical F
 
 Jost, L. (2008). GST and its relatives do not measure differentiation. Molecular ecology, 17(18), 4015-4026.
 
-Knaus, B. J., & Grünwald, N. J. (2017). vcfr: a package to manipulate and visualize variant call format data in R. Molecular ecology          resources, 17(1), 44-53.
+Knaus, B. J., & Grünwald, N. J. (2017). vcfr: a package to manipulate and visualize variant call format data in R. Molecular ecology resources, 17(1), 44-53.
+
+Murphy, M. O., Farleigh, K., Peterman, W. E., Jezkova, T., & Boone, M. D. (2025). Land-cover patterns differentially affect population genetic structure and connectivity of two anurans. Landscape Ecology, 40(4), 1-19.
 
 Nei, M. (1972). Genetic distance between populations. The American Naturalist, 106(949), 283-292.
 
@@ -387,8 +581,10 @@ Pembleton, L. W., Cogan, N. O., & Forster, J. W. (2013). St AMPP: An R package f
 
 Weir, B. S., & Cockerham, C. C. (1984). Estimating F-statistics for the analysis of population structure. evolution, 1358-1370.
 
+Wiens, B. J., & Colella, J. P. (2025). That's Not a Hybrid: How to Distinguish Patterns of Admixture and Isolation By Distance. Molecular Ecology Resources, 25(3), e14039.
+
 Winter, D., Green, P., Kamvar, Z., & Gosselin, T. (2017). mmod: modern measures of population differentiation (Version 1.3.3).
 
 ## Acknowledgements
 
-We thank the authors of `hierfstat`, `mmod`, `StAMPP`, and all of the package dependencies. They provided inspiration for `PopGenHelpR` and their commitment to open science made it possible to develop and benchmark our package.
+We thank the authors of `hierfstat`, `mmod`, `StAMPP`, and all of the package dependencies. They provided inspiration for `PopGenHelpR` and their commitment to open science made it possible to develop and test our package.
