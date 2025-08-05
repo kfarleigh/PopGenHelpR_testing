@@ -469,3 +469,34 @@ max(PGH_het_murphy_wNA$HL[,1]-murphy_hl, na.rm = T)
 mean(PGH_het_murphy_wNA$HL[,1]-murphy_hl, na.rm = T)
 median(PGH_het_murphy_wNA$HL[,1]-murphy_hl, na.rm = T)
 
+
+##############################################
+##### Make sure the write arguments work #####
+##############################################
+
+PGH_dif_HL <- Differentiation(HornedLizard_VCF, pops = HornedLizard_Pop, statistic = "all", prefix = "./write_test_wprefix/HL_test_dif_all", write = T)
+
+PGH_het_HL <- Heterozygosity(data = HornedLizard_VCF, pops = HornedLizard_Pop, prefix = "./write_test_wprefix/HL_test_het_all", write = TRUE, statistic = "all")
+
+PGH_PA_HL <- Private.alleles(data = HornedLizard_VCF, pops = HornedLizard_Pop, prefix = "./write_test_wprefix/HL_test_pa", write = TRUE)
+
+# Let's just try a single statistic for each, with a prefix 
+Differentiation(HornedLizard_VCF, pops = HornedLizard_Pop, statistic = "Fst", prefix = "./write_test_wprefix/HL_test_dif_Fst", write = T)
+
+Heterozygosity(data = HornedLizard_VCF, pops = HornedLizard_Pop, prefix = "./write_test_wprefix/HL_test_het_Ho", write = TRUE, statistic = "Ho")
+
+# Let's try with no prefix 
+PGH_dif_HL <- Differentiation(HornedLizard_VCF, pops = HornedLizard_Pop, statistic = "",, write = T)
+
+PGH_het_HL <- Heterozygosity(data = HornedLizard_VCF, pops = HornedLizard_Pop, write = TRUE, statistic = "all")
+
+PGH_PA_HL <- Private.alleles(data = HornedLizard_VCF, pops = HornedLizard_Pop, write = TRUE)
+
+# Let's just try a single statistic for each, without a prefix 
+Differentiation(HornedLizard_VCF, pops = HornedLizard_Pop, statistic = "Fst", write = T)
+
+Heterozygosity(data = HornedLizard_VCF, pops = HornedLizard_Pop, write = TRUE, statistic = "Ho")
+
+
+
+

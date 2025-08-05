@@ -61,12 +61,12 @@ library(tidyr)
 
 ```
 
-**Note that these calculations will take a long time to run yourself. On the order of hours to days depending on your machine.**
+**Note that these calculations will take a long time to run yourself. On the order of hours to days depending on your machine. Also, `mmod` kicks out a ton of warnings due to missing data, making the markdown html very long, apologies.**
 
 
 We will start by comparing PopGenHelpR's `Differentiation` function with genetic differentiation from other R packages. 
 
-#### Horned lizard data differentiation calculations
+### Horned lizard data differentiation calculations
 
 Let's start with the horned lizard dataset. We will to convert the data to some other formats for other packages. 
 
@@ -109,7 +109,7 @@ Stmp_indND <- stamppNeisD(Glight, pop = FALSE)
 
 ```
 
-#### Wiens & Collela (2025) differentiation calculations
+### Wiens & Collela (2025) differentiation calculations
 
 Next, we will calculate statiistics using the Wiens & Collela data. Again, we have to convert to other formats. We will also use different file types as input to ensure that PopGenHelpR provides the same estimates regardless of file type or R object.
 
@@ -180,7 +180,7 @@ Stmp_indND2 <- stamppNeisD(Glight2, pop = FALSE)
 
 Nice, our calculations are the same regardless if we used a vcf file, vcfR object, or geno file. Let's move on to the cricket frog data before comparing the outputs!
 
-#### Cricket frog differentiation calculations
+### Cricket frog differentiation calculations
 
 Finally, we will run the calculations on the cricket frog data from Murphy et al. (2025). 
 
@@ -220,7 +220,7 @@ Stmp_indND4 <- stamppNeisD(Glight4, pop = FALSE)
 ```
 
 
-##### Comparing the outputs from PopGenHelpR differentiation function with other R packages
+### Comparing the outputs from PopGenHelpR differentiation function with other R packages
 
 We can compare the PopGenHelpR output with other packages to see if they are different. Note that we have to do some formatting/data wrangling to ensure that we are comparing the right things for some of the statistics. 
 
@@ -367,7 +367,7 @@ median(PGH_murphy_dif2_JDwNA$NeisD_ind-Stmp_indND4_mat, na.rm = T)
 
 The differentiation estimates look good, what about our estimates of heterozygosity?
 
-#### Heterozygosity calculations
+### Heterozygosity calculations
 
 First, we need to rename a few of the wiens populations because of how the homozygosity and internal relatedness calculations work. 
 
@@ -556,8 +556,6 @@ mean(PGH_het_murphy_wNA$HL[,1]-murphy_hl, na.rm = T)
 median(PGH_het_murphy_wNA$HL[,1]-murphy_hl, na.rm = T)
 
 ```
-
-
 
 
 Please reach out to Keaka Farleigh (keakafarleigh@gmail.com) if you have any questions, and please see the references and acknowledgments below. 
