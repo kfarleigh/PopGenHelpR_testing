@@ -486,7 +486,7 @@ Differentiation(HornedLizard_VCF, pops = HornedLizard_Pop, statistic = "Fst", pr
 Heterozygosity(data = HornedLizard_VCF, pops = HornedLizard_Pop, prefix = "./write_test_wprefix/HL_test_het_Ho", write = TRUE, statistic = "Ho")
 
 # Let's try with no prefix 
-PGH_dif_HL <- Differentiation(HornedLizard_VCF, pops = HornedLizard_Pop, statistic = "",, write = T)
+PGH_dif_HL <- Differentiation(HornedLizard_VCF, pops = HornedLizard_Pop, statistic = "all",, write = T)
 
 PGH_het_HL <- Heterozygosity(data = HornedLizard_VCF, pops = HornedLizard_Pop, write = TRUE, statistic = "all")
 
@@ -496,7 +496,3 @@ PGH_PA_HL <- Private.alleles(data = HornedLizard_VCF, pops = HornedLizard_Pop, w
 Differentiation(HornedLizard_VCF, pops = HornedLizard_Pop, statistic = "Fst", write = T)
 
 Heterozygosity(data = HornedLizard_VCF, pops = HornedLizard_Pop, write = TRUE, statistic = "Ho")
-
-
-
-
