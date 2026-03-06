@@ -190,11 +190,31 @@ max(abs(PGH_dif_HL$JostsD-mmod_mat), na.rm = T)
 mean(PGH_dif_HL$JostsD-mmod_mat, na.rm = T)
 median(PGH_dif_HL$JostsD-mmod_mat, na.rm = T)
 
+# Loss percent
+# 8.529634e-14
+max(100*(abs(PGH_dif_HL$JostsD-mmod_mat)/mmod_mat), na.rm = TRUE)
+
+# 5.058641e-14
+mean(100*(abs(PGH_dif_HL$JostsD-mmod_mat)/mmod_mat), na.rm = TRUE)
+
+#  6.4629e-14
+median(100*(abs(PGH_dif_HL$JostsD-mmod_mat)/mmod_mat), na.rm = TRUE)
 
 # Wiens data 
 max(abs(PGH_wiens_dif_vcf$JostsD-mmod_wiens_JD_mat), na.rm = T)
 mean(PGH_wiens_dif_vcf$JostsD-mmod_wiens_JD_mat, na.rm = T)
 median(PGH_wiens_dif_vcf$JostsD-mmod_wiens_JD_mat, na.rm = T)
+
+# Loss percent
+# 2.97e-14
+max(100*abs((PGH_wiens_dif_vcf$JostsD-mmod_wiens_JD_mat)/mmod_wiens_JD_mat), na.rm = T)
+
+# 1.41e-16
+mean(100*abs((PGH_wiens_dif_vcf$JostsD-mmod_wiens_JD_mat)/mmod_wiens_JD_mat), na.rm = T)
+
+# 0
+median(100*abs((PGH_wiens_dif_vcf$JostsD-mmod_wiens_JD_mat)/mmod_wiens_JD_mat), na.rm = T)
+
 
 # Murphy data needs to be looped, mmod outputs populations in different order than PGH 
 murph_pop <- unique(murphy_pops$population)
@@ -204,6 +224,7 @@ murph_comps <- combn(murph_pop, m = 2)
 
 JD_abs_dif <- c()
 JD_dif <- c()
+JD_per_dif <- c()
 
 for(i in 1:ncol(murph_comps)){
   
@@ -231,12 +252,18 @@ for(i in 1:ncol(murph_comps)){
   JD_abs_dif <- c(JD_abs_dif, abs(tmp_PGH-tmp_mmod))
   JD_dif <- c(JD_dif, tmp_PGH-tmp_mmod)
   
+  JD_per_dif <- c(JD_per_dif, 100*(abs(tmp_PGH-tmp_mmod)/tmp_mmod))
+  
   remove(idx_pop1,idx_pop1_PGH,idx_pop2,idx_pop2_PGH,tmp_PGH,tmp_mmod)
 }
 
 max(JD_abs_dif)
 mean(JD_dif)
 median(JD_dif)
+
+max(JD_per_dif)
+mean(JD_per_dif)
+median(JD_per_dif)
 
 ## Fst
 # Farleigh et al. (2021) data
@@ -260,15 +287,26 @@ max(abs(PGH_dif_HL$NeisD_pop-Stmp_popND), na.rm = T)
 mean(PGH_dif_HL$NeisD_pop-Stmp_popND, na.rm = T)
 median(PGH_dif_HL$NeisD_pop-Stmp_popND, na.rm = T)
 
+max(100*abs((PGH_dif_HL$NeisD_pop-Stmp_popND)/Stmp_popND), na.rm = TRUE)
+mean(100*abs((PGH_dif_HL$NeisD_pop-Stmp_popND)/Stmp_popND), na.rm = TRUE)
+
 # Wiens data 
 max(abs(PGH_wiens_dif_vcf$NeisD_pop-Stmp_popND2_mat), na.rm = T)
 mean(PGH_wiens_dif_vcf$NeisD_pop-Stmp_popND2_mat, na.rm = T)
 median(PGH_wiens_dif_vcf$NeisD_pop-Stmp_popND2_mat, na.rm = T)
 
+max(100*abs((PGH_wiens_dif_vcf$NeisD_pop-Stmp_popND2_mat)/Stmp_popND2_mat), na.rm = TRUE)
+mean(100*abs((PGH_wiens_dif_vcf$NeisD_pop-Stmp_popND2_mat)/Stmp_popND2_mat), na.rm = TRUE)
+
+
 # Murphy with NA
 max(abs(PGH_murphy_dif2_JDwNA$NeisD_pop-Stmp_popND4_mat), na.rm = T)
 mean(PGH_murphy_dif2_JDwNA$NeisD_pop-Stmp_popND4_mat, na.rm = T)
 median(PGH_murphy_dif2_JDwNA$NeisD_pop-Stmp_popND4_mat, na.rm = T)
+
+max(100*abs((PGH_murphy_dif2_JDwNA$NeisD_pop-Stmp_popND4_mat)/Stmp_popND4_mat), na.rm = TRUE)
+mean(100*abs((PGH_murphy_dif2_JDwNA$NeisD_pop-Stmp_popND4_mat)/Stmp_popND4_mat), na.rm = TRUE)
+
 
 ## Individual Nei's D
 # Farleigh et al. (2021) data
@@ -276,16 +314,26 @@ max(abs(PGH_dif_HL$NeisD_ind-Stmp_indND), na.rm = T)
 mean(PGH_dif_HL$NeisD_ind-Stmp_indND, na.rm = T)
 median(PGH_dif_HL$NeisD_ind-Stmp_indND, na.rm = T)
 
+max(100*abs((PGH_dif_HL$NeisD_ind-Stmp_indND)/Stmp_indND), na.rm = TRUE)
+mean(100*abs((PGH_dif_HL$NeisD_ind-Stmp_indND)/Stmp_indND), na.rm = TRUE)
+median(100*abs((PGH_dif_HL$NeisD_ind-Stmp_indND)/Stmp_indND), na.rm = TRUE)
+
+
 # Wiens data 
 max(abs(PGH_wiens_dif_vcf$NeisD_ind-Stmp_indND2_mat), na.rm = T)
 mean(PGH_wiens_dif_vcf$NeisD_ind-Stmp_indND2_mat, na.rm = T)
 median(PGH_wiens_dif_vcf$NeisD_ind-Stmp_indND2_mat, na.rm = T)
+
+max(100*abs((PGH_wiens_dif_vcf$NeisD_ind-Stmp_indND2_mat)/Stmp_indND2), na.rm = TRUE)
+mean(100*abs((PGH_wiens_dif_vcf$NeisD_ind-Stmp_indND2_mat)/Stmp_indND2), na.rm = TRUE)
 
 # Murphy with NA
 max(abs(PGH_murphy_dif2_JDwNA$NeisD_ind-Stmp_indND4_mat), na.rm = T)
 mean(PGH_murphy_dif2_JDwNA$NeisD_ind-Stmp_indND4_mat, na.rm = T)
 median(PGH_murphy_dif2_JDwNA$NeisD_ind-Stmp_indND4_mat, na.rm = T)
 
+max(100*abs((PGH_murphy_dif2_JDwNA$NeisD_ind-Stmp_indND4_mat)/Stmp_indND4_mat), na.rm = TRUE)
+mean(100*abs((PGH_murphy_dif2_JDwNA$NeisD_ind-Stmp_indND4_mat)/Stmp_indND4_mat), na.rm = TRUE)
 
 ##########################
 ##### Heterozygosity #####
@@ -359,16 +407,27 @@ max(abs(PGH_het_HL$Ho_perpop[,1]-Hstat_Ho_HL))
 mean(PGH_het_HL$Ho_perpop[,1]-Hstat_Ho_HL)
 median(PGH_het_HL$Ho_perpop[,1]-Hstat_Ho_HL)
 
+max(100*abs((PGH_het_HL$Ho_perpop[,1]-Hstat_Ho_HL)/Hstat_Ho_HL), na.rm = TRUE)
+mean(100*abs((PGH_het_HL$Ho_perpop[,1]-Hstat_Ho_HL)/Hstat_Ho_HL), na.rm = TRUE)
+
+
 # Check if weins matched
 max(abs(PGH_het_wiens_vcf$Ho_perpop[order(match(PGH_het_wiens_vcf$Ho_perpop$Pop, names(Hstat_Ho_weins))),1] - Hstat_Ho_weins))
 mean(PGH_het_wiens_vcf$Ho_perpop[order(match(PGH_het_wiens_vcf$Ho_perpop$Pop, names(Hstat_Ho_weins))),1] - Hstat_Ho_weins)
 median(PGH_het_wiens_vcf$Ho_perpop[order(match(PGH_het_wiens_vcf$Ho_perpop$Pop, names(Hstat_Ho_weins))),1] - Hstat_Ho_weins)
+
+max(100*abs((PGH_het_wiens_vcf$Ho_perpop[order(match(PGH_het_wiens_vcf$Ho_perpop$Pop, names(Hstat_Ho_weins))),1]-Hstat_Ho_weins)/Hstat_Ho_weins), na.rm = TRUE)
+mean(100*abs((PGH_het_wiens_vcf$Ho_perpop[order(match(PGH_het_wiens_vcf$Ho_perpop$Pop, names(Hstat_Ho_weins))),1]-Hstat_Ho_weins)/Hstat_Ho_weins), na.rm = TRUE)
 
 
 # Check if murphy data matched, we do this manually because they are ordered differently
 max(abs(PGH_het_murphy_wNA$Ho_perpop[order(match(PGH_het_murphy_wNA$Ho_perpop$Pop, names(Hstat_Ho_murphy_wNA))),1] - Hstat_Ho_murphy_wNA))
 mean(PGH_het_murphy_wNA$Ho_perpop[order(match(PGH_het_murphy_wNA$Ho_perpop$Pop, names(Hstat_Ho_murphy_wNA))),1] - Hstat_Ho_murphy_wNA)
 median(PGH_het_murphy_wNA$Ho_perpop[order(match(PGH_het_murphy_wNA$Ho_perpop$Pop, names(Hstat_Ho_murphy_wNA))),1] - Hstat_Ho_murphy_wNA)
+
+max(100*abs((PGH_het_murphy_wNA$Ho_perpop[order(match(PGH_het_murphy_wNA$Ho_perpop$Pop, names(Hstat_Ho_murphy_wNA))),1] - Hstat_Ho_murphy_wNA)/Hstat_Ho_murphy_wNA), na.rm = TRUE)
+mean(100*abs((PGH_het_murphy_wNA$Ho_perpop[order(match(PGH_het_murphy_wNA$Ho_perpop$Pop, names(Hstat_Ho_murphy_wNA))),1] - Hstat_Ho_murphy_wNA)/Hstat_Ho_murphy_wNA), na.rm = TRUE)
+median(100*abs((PGH_het_murphy_wNA$Ho_perpop[order(match(PGH_het_murphy_wNA$Ho_perpop$Pop, names(Hstat_Ho_murphy_wNA))),1] - Hstat_Ho_murphy_wNA)/Hstat_Ho_murphy_wNA), na.rm = TRUE)
 
 
 
@@ -387,15 +446,30 @@ max(abs(PGH_het_HL$He_perpop$Expected.Heterozygosity-He_HL))
 mean(PGH_het_HL$He_perpop$Expected.Heterozygosity-He_HL)
 median(PGH_het_HL$He_perpop$Expected.Heterozygosity-He_HL)
 
+max(100*abs((PGH_het_HL$He_perpop$Expected.Heterozygosity-He_HL)/He_HL), na.rm = TRUE)
+mean(100*abs((PGH_het_HL$He_perpop$Expected.Heterozygosity-He_HL)/He_HL), na.rm = TRUE)
+median(100*abs((PGH_het_HL$He_perpop$Expected.Heterozygosity-He_HL)/He_HL), na.rm = TRUE)
+
+
 # Check if the weins ones match
 max(abs(PGH_het_wiens_vcf$He_perpop[order(match(PGH_het_wiens_vcf$He_perpop$Pop, names(He_weins))),1]-He_weins))
 mean(PGH_het_wiens_vcf$He_perpop[order(match(PGH_het_wiens_vcf$He_perpop$Pop, names(He_weins))),1]-He_weins)
 median(PGH_het_wiens_vcf$He_perpop[order(match(PGH_het_wiens_vcf$He_perpop$Pop, names(He_weins))),1]-He_weins)
 
+max(100*abs((PGH_het_wiens_vcf$He_perpop[order(match(PGH_het_wiens_vcf$He_perpop$Pop, names(He_weins))),1]-He_weins)/He_weins), na.rm = TRUE)
+mean(100*abs((PGH_het_wiens_vcf$He_perpop[order(match(PGH_het_wiens_vcf$He_perpop$Pop, names(He_weins))),1]-He_weins)/He_weins), na.rm = TRUE)
+median(100*abs((PGH_het_wiens_vcf$He_perpop[order(match(PGH_het_wiens_vcf$He_perpop$Pop, names(He_weins))),1]-He_weins)/He_weins), na.rm = TRUE)
+
+
+
 # Check if the murphy ones match
 max(abs(PGH_het_murphy_wNA$He_perpop[order(match(PGH_het_murphy_wNA$He_perpop$Pop, names(He_murphy_wNA))),1]-He_murphy_wNA))
 mean(PGH_het_murphy_wNA$He_perpop[order(match(PGH_het_murphy_wNA$He_perpop$Pop, names(He_murphy_wNA))),1]-He_murphy_wNA)
 median(PGH_het_murphy_wNA$He_perpop[order(match(PGH_het_murphy_wNA$He_perpop$Pop, names(He_murphy_wNA))),1]-He_murphy_wNA)
+
+max(100*abs((PGH_het_murphy_wNA$He_perpop[order(match(PGH_het_murphy_wNA$He_perpop$Pop, names(He_murphy_wNA))),1]-He_murphy_wNA)/He_murphy_wNA), na.rm = TRUE)
+mean(100*abs((PGH_het_murphy_wNA$He_perpop[order(match(PGH_het_murphy_wNA$He_perpop$Pop, names(He_murphy_wNA))),1]-He_murphy_wNA)/He_murphy_wNA), na.rm = TRUE)
+median(100*abs((PGH_het_murphy_wNA$He_perpop[order(match(PGH_het_murphy_wNA$He_perpop$Pop, names(He_murphy_wNA))),1]-He_murphy_wNA)/He_murphy_wNA), na.rm = TRUE)
 
 
 
@@ -443,15 +517,24 @@ max(PGH_het_HL$IR[,1]-HL_ir, na.rm = T)
 mean(PGH_het_HL$IR[,1]-HL_ir, na.rm = T)
 median(PGH_het_HL$IR[,1]-HL_ir, na.rm = T)
 
+max(100*abs((PGH_het_HL$IR[,1]-HL_ir)/HL_ir), na.rm = TRUE)
+mean(100*abs((PGH_het_HL$IR[,1]-HL_ir)/HL_ir), na.rm = TRUE)
+
 # Weins & Collela (2025)
 max(PGH_het_wiens_vcf$IR[,1]-weins_ir, na.rm = T)
 mean(PGH_het_wiens_vcf$IR[,1]-weins_ir, na.rm = T)
 median(PGH_het_wiens_vcf$IR[,1]-weins_ir, na.rm = T)
 
+max(100*abs((PGH_het_wiens_vcf$IR[,1]-weins_ir)/weins_ir), na.rm = TRUE)
+mean(100*abs((PGH_het_wiens_vcf$IR[,1]-weins_ir)/weins_ir), na.rm = TRUE)
+
 # Murphy et al. (2025)
 max(PGH_het_murphy_wNA$IR[,1]-murphy_ir, na.rm = T)
 mean(PGH_het_murphy_wNA$IR[,1]-murphy_ir, na.rm = T)
 median(PGH_het_murphy_wNA$IR[,1]-murphy_ir, na.rm = T)
+
+max(100*abs((PGH_het_murphy_wNA$IR[,1]-murphy_ir)/murphy_ir), na.rm = TRUE)
+mean(100*abs((PGH_het_murphy_wNA$IR[,1]-murphy_ir)/murphy_ir), na.rm = TRUE)
 
 
 # Farleigh et al. (2021)
